@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addRelationship, updateRelationship } from "../actions";
 import type { Cadence, RelationshipWithDetails } from "@/lib/types";
+import { ImageUpload } from "./ImageUpload";
 
 const fieldClass =
   "w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink placeholder:text-muted/70 focus:border-sage focus:ring-2 focus:ring-sage/20 outline-none transition";
@@ -61,17 +62,10 @@ export function PersonForm({
       </div>
 
       <div>
-        <label className={labelClass} htmlFor="photo">
-          Photo URL <span className="normal-case tracking-normal">(optional)</span>
-        </label>
-        <input
-          id="photo"
-          name="photo"
-          type="url"
-          defaultValue={person?.photo ?? ""}
-          placeholder="https://…"
-          className={fieldClass}
-        />
+        <span className={labelClass}>
+          Photo <span className="normal-case tracking-normal">(optional)</span>
+        </span>
+        <ImageUpload name="photo" initialUrl={person?.photo} />
       </div>
 
       <div>

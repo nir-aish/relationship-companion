@@ -79,24 +79,47 @@ export async function deleteRelationship(id: string) {
 export async function logInteraction(
   relationshipId: string,
   type: InteractionType = "message",
+  date?: string,
+  note?: string,
 ) {
   const { supabase, user } = await requireUser();
-  const today = new Date().toISOString().slice(0, 10);
+  const day = date?.trim() || new Date().toISOString().slice(0, 10);
 
   const { error: insertError } = await supabase.from("interactions").insert({
     user_id: user.id,
     relationship_id: relationshipId,
-    date: today,
+    date: day,
     type,
   });
   if (insertError) throw new Error(insertError.message);
 
+  // Only advance last_interaction_date; never move it backwards.
+  const { data: rel } = await supabase
+    .from("relationships")
+    .select("last_interaction_date")
+    .eq("id", relationshipId)
+    .eq("user_id", user.id)
+    .single();
+
+  const current = rel?.last_interaction_date ?? null;
+  const newLast = !current || current < day ? day : current;
+
   const { error: updateError } = await supabase
     .from("relationships")
-    .update({ last_interaction_date: today })
+    .update({ last_interaction_date: newLast })
     .eq("id", relationshipId)
     .eq("user_id", user.id);
   if (updateError) throw new Error(updateError.message);
+
+  const trimmedNote = note?.trim();
+  if (trimmedNote) {
+    const { error: noteError } = await supabase.from("context_entries").insert({
+      user_id: user.id,
+      relationship_id: relationshipId,
+      text: trimmedNote,
+    });
+    if (noteError) throw new Error(noteError.message);
+  }
 
   revalidatePath("/");
 }
