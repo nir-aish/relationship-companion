@@ -6,6 +6,7 @@ import { ReachOut } from "./ReachOut";
 import { PersonCard } from "./PersonCard";
 import { Modal } from "./Modal";
 import { PersonForm } from "./PersonForm";
+import { WeeklyCheckinBanner } from "./WeeklyCheckinBanner";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -44,6 +45,7 @@ export function Dashboard({
 
   return (
     <div className="min-h-dvh">
+      <WeeklyCheckinBanner />
       <div className="mx-auto w-full max-w-2xl px-5 sm:px-6 pb-24 pt-10 sm:pt-16">
         {/* Header */}
         <header className="flex items-start justify-between gap-4 mb-10">
