@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { RelationshipWithDetails } from "@/lib/types";
+import type { Category, RelationshipWithDetails } from "@/lib/types";
 import { ReachOut } from "./ReachOut";
 import { PersonCard } from "./PersonCard";
 import { Modal } from "./Modal";
@@ -15,6 +15,10 @@ function greeting(): string {
   return "Good evening";
 }
 
+function categoryOf(p: RelationshipWithDetails): Category {
+  return p.category ?? "personal";
+}
+
 export function Dashboard({
   people,
   userName,
@@ -24,12 +28,25 @@ export function Dashboard({
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [view, setView] = useState<Category>("personal");
   const [dialog, setDialog] = useState<
     { mode: "add" } | { mode: "edit"; person: RelationshipWithDetails } | null
   >(null);
 
-  const active = people.filter((p) => !p.archived);
-  const archived = people.filter((p) => p.archived);
+  const inView = people.filter((p) => categoryOf(p) === view);
+  const active = inView.filter((p) => !p.archived);
+  const archived = inView.filter((p) => p.archived);
+
+  const counts = useMemo(() => {
+    let personal = 0;
+    let work = 0;
+    for (const p of people) {
+      if (p.archived) continue;
+      if (categoryOf(p) === "work") work += 1;
+      else personal += 1;
+    }
+    return { personal, work };
+  }, [people]);
 
   const firstName = useMemo(() => userName.split(/[\s@]/)[0], [userName]);
 
@@ -43,19 +60,25 @@ export function Dashboard({
     });
   }
 
+  function switchView(next: Category) {
+    if (next === view) return;
+    setView(next);
+    setActiveId(null);
+    setShowArchived(false);
+  }
+
   return (
     <div className="min-h-dvh">
       <WeeklyCheckinBanner />
       <div className="mx-auto w-full max-w-2xl px-5 sm:px-6 pb-24 pt-10 sm:pt-16">
         {/* Header */}
-        <header className="flex items-start justify-between gap-4 mb-10">
+        <header className="flex items-start justify-between gap-4 mb-6">
           <div>
             <p className="text-xs uppercase tracking-[0.28em] text-muted mb-3">
               Companion
             </p>
             <h1 className="font-serif text-3xl sm:text-4xl text-ink leading-tight">
-              {greeting()},{" "}
-              <span className="italic">{firstName}</span>.
+              {greeting()}, <span className="italic">{firstName}</span>.
             </h1>
           </div>
           <form action="/auth/signout" method="post">
@@ -68,13 +91,35 @@ export function Dashboard({
           </form>
         </header>
 
+        {/* Personal / Work toggle */}
+        <div className="mb-10 inline-flex rounded-full border border-line bg-paper p-1">
+          {(["personal", "work"] as Category[]).map((c) => (
+            <button
+              key={c}
+              onClick={() => switchView(c)}
+              className={`rounded-full px-4 sm:px-5 py-1.5 text-[14px] font-medium capitalize transition ${
+                view === c
+                  ? "bg-ink text-cream"
+                  : "text-ink-soft hover:text-ink"
+              }`}
+            >
+              {c}
+              <span
+                className={`ml-1.5 text-[12px] ${
+                  view === c ? "text-cream/70" : "text-muted"
+                }`}
+              >
+                {counts[c]}
+              </span>
+            </button>
+          ))}
+        </div>
+
         {/* Reach Out */}
         <section className="mb-12">
           <div className="flex items-baseline justify-between mb-4">
             <h2 className="font-serif text-2xl text-ink">Reach out</h2>
-            <span className="text-[13px] text-muted">
-              this week &amp; soon
-            </span>
+            <span className="text-[13px] text-muted">this week &amp; soon</span>
           </div>
           <ReachOut people={active} onSelect={select} />
         </section>
@@ -82,7 +127,7 @@ export function Dashboard({
         {/* Everyone */}
         <section>
           <div className="flex items-baseline justify-between mb-4">
-            <h2 className="font-serif text-2xl text-ink">People</h2>
+            <h2 className="font-serif text-2xl text-ink capitalize">{view}</h2>
             <button
               onClick={() => setDialog({ mode: "add" })}
               className="text-[13px] font-medium text-sage-deep hover:text-sage transition"
@@ -93,11 +138,9 @@ export function Dashboard({
 
           {active.length === 0 ? (
             <div className="rounded-xl2 border border-dashed border-line bg-paper/60 px-6 py-12 text-center">
-              <p className="font-serif text-xl text-ink">
-                No one here yet.
-              </p>
+              <p className="font-serif text-xl text-ink">No one here yet.</p>
               <p className="mt-2 text-[15px] text-ink-soft">
-                Add the people you want to stay close to.
+                Add the {view} people you want to stay close to.
               </p>
               <button
                 onClick={() => setDialog({ mode: "add" })}
@@ -164,6 +207,7 @@ export function Dashboard({
         {dialog && (
           <PersonForm
             person={dialog.mode === "edit" ? dialog.person : undefined}
+            defaultCategory={view}
             onDone={() => setDialog(null)}
           />
         )}

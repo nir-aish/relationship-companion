@@ -1,5 +1,7 @@
 export type Cadence = "1week" | "2weeks" | "3weeks";
 
+export type Category = "personal" | "work";
+
 export type InteractionType = "message" | "call" | "met" | "video" | "other";
 
 export interface Relationship {
@@ -8,6 +10,7 @@ export interface Relationship {
   name: string;
   photo: string | null;
   birthday: string | null; // ISO date (YYYY-MM-DD)
+  category: Category;
   cadence: Cadence;
   last_interaction_date: string | null;
   archived: boolean;

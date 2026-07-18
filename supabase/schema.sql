@@ -13,6 +13,9 @@ begin
   if not exists (select 1 from pg_type where typname = 'interaction_type') then
     create type interaction_type as enum ('message', 'call', 'met', 'video', 'other');
   end if;
+  if not exists (select 1 from pg_type where typname = 'relationship_category') then
+    create type relationship_category as enum ('personal', 'work');
+  end if;
 end$$;
 
 -- ----------------------------------------------------------------------------
@@ -24,6 +27,7 @@ create table if not exists relationships (
   name text not null,
   photo text,
   birthday date,
+  category relationship_category not null default 'personal',
   cadence cadence not null default '2weeks',
   last_interaction_date date,
   archived boolean not null default false,

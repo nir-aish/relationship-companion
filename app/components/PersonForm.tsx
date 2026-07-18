@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addRelationship, updateRelationship } from "../actions";
-import type { Cadence, RelationshipWithDetails } from "@/lib/types";
+import type { Cadence, Category, RelationshipWithDetails } from "@/lib/types";
 import { ImageUpload } from "./ImageUpload";
 
 const fieldClass =
@@ -19,19 +19,25 @@ const cadenceOptions: { value: Cadence; label: string }[] = [
 
 export function PersonForm({
   person,
+  defaultCategory = "personal",
   onDone,
 }: {
   person?: RelationshipWithDetails;
+  defaultCategory?: Category;
   onDone: () => void;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [cadence, setCadence] = useState<Cadence>(person?.cadence ?? "2weeks");
+  const [category, setCategory] = useState<Category>(
+    person?.category ?? defaultCategory,
+  );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     formData.set("cadence", cadence);
+    formData.set("category", category);
     startTransition(async () => {
       if (person) {
         formData.set("id", person.id);
@@ -59,6 +65,26 @@ export function PersonForm({
           placeholder="Who is this?"
           className={fieldClass}
         />
+      </div>
+
+      <div>
+        <span className={labelClass}>Which circle</span>
+        <div className="grid grid-cols-2 gap-2">
+          {(["personal", "work"] as Category[]).map((c) => (
+            <button
+              type="button"
+              key={c}
+              onClick={() => setCategory(c)}
+              className={`rounded-xl border px-2 py-2.5 text-[13px] font-medium capitalize transition ${
+                category === c
+                  ? "border-sage bg-sage/10 text-sage-deep"
+                  : "border-line bg-white text-ink-soft hover:border-ink/20"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div>

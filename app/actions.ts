@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { Cadence, InteractionType } from "@/lib/types";
+import type { Cadence, Category, InteractionType } from "@/lib/types";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -29,6 +29,7 @@ export async function addRelationship(formData: FormData) {
     name,
     photo: clean(formData.get("photo")),
     birthday: clean(formData.get("birthday")),
+    category: (clean(formData.get("category")) as Category) ?? "personal",
     cadence: (clean(formData.get("cadence")) as Cadence) ?? "2weeks",
   });
   if (error) throw new Error(error.message);
@@ -46,6 +47,7 @@ export async function updateRelationship(formData: FormData) {
       name: clean(formData.get("name")),
       photo: clean(formData.get("photo")),
       birthday: clean(formData.get("birthday")),
+      category: (clean(formData.get("category")) as Category) ?? "personal",
       cadence: (clean(formData.get("cadence")) as Cadence) ?? "2weeks",
     })
     .eq("id", id)
