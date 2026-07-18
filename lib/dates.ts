@@ -1,4 +1,5 @@
 import {
+  addDays,
   addWeeks,
   differenceInCalendarDays,
   isBefore,
@@ -117,6 +118,30 @@ export function upcomingEventsFor(
   }
 
   return result.sort((a, b) => a.daysUntil - b.daysUntil);
+}
+
+/**
+ * Upcoming events that still warrant a nudge in "Reach out" — i.e. ones you
+ * have NOT already been in touch about. An event stops nudging once the last
+ * interaction is on/after the day the event entered the reminder window
+ * (eventDate - withinDays).
+ */
+export function reachOutEventsFor(
+  rel: Relationship,
+  events: RelationshipEvent[],
+  withinDays: number = UPCOMING_WINDOW_DAYS,
+): UpcomingEvent[] {
+  const upcoming = upcomingEventsFor(rel, events, withinDays);
+  if (!rel.last_interaction_date) return upcoming;
+
+  const today = startOfDay(new Date());
+  const last = parse(rel.last_interaction_date);
+
+  return upcoming.filter((ev) => {
+    const windowOpen = addDays(today, ev.daysUntil - withinDays);
+    // Keep nudging only if we haven't been in touch since the window opened.
+    return isBefore(last, windowOpen);
+  });
 }
 
 export function relativeDayLabel(daysUntil: number): string {

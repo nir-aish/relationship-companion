@@ -7,8 +7,8 @@ import {
   approxWeeksAgo,
   cadenceLabel,
   isOverdue,
+  reachOutEventsFor,
   relativeDayLabel,
-  upcomingEventsFor,
 } from "@/lib/dates";
 import { logInteraction } from "../actions";
 import { Avatar } from "./Avatar";
@@ -17,7 +17,7 @@ import { Modal } from "./Modal";
 interface ReachOutRow {
   person: RelationshipWithDetails;
   overdue: boolean;
-  upcoming: ReturnType<typeof upcomingEventsFor>;
+  upcoming: ReturnType<typeof reachOutEventsFor>;
 }
 
 const typeOptions: InteractionType[] = [
@@ -53,9 +53,11 @@ export function ReachOut({
     .map((person) => ({
       person,
       overdue: isOverdue(person),
-      upcoming: upcomingEventsFor(person, person.events),
+      upcoming: reachOutEventsFor(person, person.events),
     }))
-    .filter((r) => r.overdue || r.upcoming.length > 0);
+    .filter((r) => r.overdue || r.upcoming.length > 0)
+    // Once checked off, drop immediately (a refresh reconciles from the server).
+    .filter((r) => !done.has(r.person.id));
 
   function openLog(person: RelationshipWithDetails, type: InteractionType) {
     setLogging({ person, type });
@@ -76,39 +78,17 @@ export function ReachOut({
     <>
       <ul className="divide-y divide-line rounded-xl2 border border-line bg-paper overflow-hidden">
         {rows.map(({ person, overdue, upcoming }) => {
-          const isDone = done.has(person.id);
           const event = upcoming[0];
           return (
             <li
               key={person.id}
-              className={`flex items-center gap-3 px-4 sm:px-5 py-3.5 transition-colors ${
-                isDone ? "opacity-50" : "hover:bg-cream/40"
-              }`}
+              className="flex items-center gap-3 px-4 sm:px-5 py-3.5 transition-colors hover:bg-cream/40"
             >
               <button
-                onClick={() =>
-                  !isDone && openLog(person, types[person.id] ?? "message")
-                }
-                disabled={isDone}
+                onClick={() => openLog(person, types[person.id] ?? "message")}
                 aria-label={`Log interaction with ${person.name}`}
-                className={`shrink-0 h-6 w-6 rounded-full border flex items-center justify-center transition ${
-                  isDone
-                    ? "border-sage bg-sage text-white"
-                    : "border-muted/50 hover:border-sage"
-                }`}
-              >
-                {isDone && (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path
-                      d="M2.5 7.5l3 3 6-6.5"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </button>
+                className="shrink-0 h-6 w-6 rounded-full border border-muted/50 hover:border-sage flex items-center justify-center transition"
+              />
 
               <Avatar name={person.name} photo={person.photo} size="sm" />
 
@@ -116,11 +96,7 @@ export function ReachOut({
                 onClick={() => onSelect(person.id)}
                 className="flex-1 text-left min-w-0"
               >
-                <span
-                  className={`block font-medium text-ink truncate ${
-                    isDone ? "line-through" : ""
-                  }`}
-                >
+                <span className="block font-medium text-ink truncate">
                   {person.name}
                 </span>
                 <span className="block text-[13px] text-muted truncate">
@@ -141,24 +117,22 @@ export function ReachOut({
                 </span>
               </button>
 
-              {!isDone && (
-                <select
-                  value={types[person.id] ?? "message"}
-                  onChange={(e) => {
-                    const type = e.target.value as InteractionType;
-                    setTypes((prev) => ({ ...prev, [person.id]: type }));
-                    openLog(person, type);
-                  }}
-                  aria-label="How did you connect?"
-                  className="shrink-0 rounded-full border border-line bg-white/60 px-2.5 py-1 text-[12px] text-ink-soft capitalize outline-none focus:border-sage hover:border-ink/20 transition"
-                >
-                  {typeOptions.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <select
+                value={types[person.id] ?? "message"}
+                onChange={(e) => {
+                  const type = e.target.value as InteractionType;
+                  setTypes((prev) => ({ ...prev, [person.id]: type }));
+                  openLog(person, type);
+                }}
+                aria-label="How did you connect?"
+                className="shrink-0 rounded-full border border-line bg-white/60 px-2.5 py-1 text-[12px] text-ink-soft capitalize outline-none focus:border-sage hover:border-ink/20 transition"
+              >
+                {typeOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
             </li>
           );
         })}
