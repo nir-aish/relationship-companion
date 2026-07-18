@@ -30,6 +30,9 @@ create table if not exists relationships (
   category relationship_category not null default 'personal',
   cadence cadence not null default '2weeks',
   last_interaction_date date,
+  role text,
+  location text,
+  family text,
   archived boolean not null default false,
   created_at timestamptz not null default now()
 );

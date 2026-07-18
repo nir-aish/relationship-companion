@@ -13,6 +13,9 @@ export interface Relationship {
   category: Category;
   cadence: Cadence;
   last_interaction_date: string | null;
+  role: string | null;
+  location: string | null;
+  family: string | null;
   archived: boolean;
   created_at: string;
 }

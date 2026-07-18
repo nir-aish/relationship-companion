@@ -24,15 +24,33 @@ export async function addRelationship(formData: FormData) {
   const name = clean(formData.get("name"));
   if (!name) return;
 
-  const { error } = await supabase.from("relationships").insert({
-    user_id: user.id,
-    name,
-    photo: clean(formData.get("photo")),
-    birthday: clean(formData.get("birthday")),
-    category: (clean(formData.get("category")) as Category) ?? "personal",
-    cadence: (clean(formData.get("cadence")) as Cadence) ?? "2weeks",
-  });
+  const { data, error } = await supabase
+    .from("relationships")
+    .insert({
+      user_id: user.id,
+      name,
+      photo: clean(formData.get("photo")),
+      birthday: clean(formData.get("birthday")),
+      category: (clean(formData.get("category")) as Category) ?? "personal",
+      cadence: (clean(formData.get("cadence")) as Cadence) ?? "2weeks",
+      role: clean(formData.get("role")),
+      location: clean(formData.get("location")),
+      family: clean(formData.get("family")),
+    })
+    .select("id")
+    .single();
   if (error) throw new Error(error.message);
+
+  const initialContext = clean(formData.get("context"));
+  if (initialContext && data) {
+    const { error: ctxError } = await supabase.from("context_entries").insert({
+      user_id: user.id,
+      relationship_id: data.id,
+      text: initialContext,
+    });
+    if (ctxError) throw new Error(ctxError.message);
+  }
+
   revalidatePath("/");
 }
 
@@ -49,6 +67,9 @@ export async function updateRelationship(formData: FormData) {
       birthday: clean(formData.get("birthday")),
       category: (clean(formData.get("category")) as Category) ?? "personal",
       cadence: (clean(formData.get("cadence")) as Cadence) ?? "2weeks",
+      role: clean(formData.get("role")),
+      location: clean(formData.get("location")),
+      family: clean(formData.get("family")),
     })
     .eq("id", id)
     .eq("user_id", user.id);

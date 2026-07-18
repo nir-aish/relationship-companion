@@ -87,45 +87,110 @@ export function PersonForm({
         </div>
       </div>
 
-      <div>
-        <span className={labelClass}>
-          Photo <span className="normal-case tracking-normal">(optional)</span>
-        </span>
-        <ImageUpload name="photo" initialUrl={person?.photo} />
-      </div>
+      {category === "personal" ? (
+        <>
+          <div>
+            <span className={labelClass}>
+              Photo{" "}
+              <span className="normal-case tracking-normal">(optional)</span>
+            </span>
+            <ImageUpload name="photo" initialUrl={person?.photo} />
+          </div>
 
-      <div>
-        <label className={labelClass} htmlFor="birthday">
-          Birthday <span className="normal-case tracking-normal">(optional)</span>
-        </label>
-        <input
-          id="birthday"
-          name="birthday"
-          type="date"
-          defaultValue={person?.birthday ?? ""}
-          className={fieldClass}
-        />
-      </div>
+          <div>
+            <label className={labelClass} htmlFor="birthday">
+              Birthday{" "}
+              <span className="normal-case tracking-normal">(optional)</span>
+            </label>
+            <input
+              id="birthday"
+              name="birthday"
+              type="date"
+              defaultValue={person?.birthday ?? ""}
+              className={fieldClass}
+            />
+          </div>
 
-      <div>
-        <span className={labelClass}>How often to stay in touch</span>
-        <div className="grid grid-cols-3 gap-2">
-          {cadenceOptions.map((opt) => (
-            <button
-              type="button"
-              key={opt.value}
-              onClick={() => setCadence(opt.value)}
-              className={`rounded-xl border px-2 py-2.5 text-[13px] font-medium transition ${
-                cadence === opt.value
-                  ? "border-sage bg-sage/10 text-sage-deep"
-                  : "border-line bg-white text-ink-soft hover:border-ink/20"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
+          <div>
+            <span className={labelClass}>How often to stay in touch</span>
+            <div className="grid grid-cols-3 gap-2">
+              {cadenceOptions.map((opt) => (
+                <button
+                  type="button"
+                  key={opt.value}
+                  onClick={() => setCadence(opt.value)}
+                  className={`rounded-xl border px-2 py-2.5 text-[13px] font-medium transition ${
+                    cadence === opt.value
+                      ? "border-sage bg-sage/10 text-sage-deep"
+                      : "border-line bg-white text-ink-soft hover:border-ink/20"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <label className={labelClass} htmlFor="role">
+              Role / title
+            </label>
+            <input
+              id="role"
+              name="role"
+              defaultValue={person?.role ?? ""}
+              placeholder="e.g. Head of Product"
+              className={fieldClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass} htmlFor="location">
+              Location{" "}
+              <span className="normal-case tracking-normal">(optional)</span>
+            </label>
+            <input
+              id="location"
+              name="location"
+              defaultValue={person?.location ?? ""}
+              placeholder="e.g. Tel Aviv"
+              className={fieldClass}
+            />
+          </div>
+
+          <div>
+            <label className={labelClass} htmlFor="family">
+              Family{" "}
+              <span className="normal-case tracking-normal">(optional)</span>
+            </label>
+            <input
+              id="family"
+              name="family"
+              defaultValue={person?.family ?? ""}
+              placeholder="e.g. Married, two kids"
+              className={fieldClass}
+            />
+          </div>
+
+          {!person && (
+            <div>
+              <label className={labelClass} htmlFor="context">
+                Context{" "}
+                <span className="normal-case tracking-normal">(optional)</span>
+              </label>
+              <textarea
+                id="context"
+                name="context"
+                rows={3}
+                placeholder="Anything worth remembering…"
+                className={`${fieldClass} resize-none`}
+              />
+            </div>
+          )}
+        </>
+      )}
 
       <div className="flex gap-2 pt-2">
         <button

@@ -31,8 +31,15 @@ export function PersonCard({
   onToggle: () => void;
   onEdit: () => void;
 }) {
-  const overdue = isOverdue(person);
+  const isWork = person.category === "work";
+  const overdue = !isWork && isOverdue(person);
   const softDate = (d: string) => format(parseISO(d), "MMM d");
+
+  const subtitle = isWork
+    ? person.role || person.location || "Work contact"
+    : `${cadenceLabel(person.cadence)} · ${approxWeeksAgo(
+        person.last_interaction_date,
+      )}`;
 
   return (
     <div
@@ -52,8 +59,7 @@ export function PersonCard({
             )}
           </span>
           <span className="block text-[13px] text-muted truncate">
-            {cadenceLabel(person.cadence)} ·{" "}
-            {approxWeeksAgo(person.last_interaction_date)}
+            {subtitle}
           </span>
         </button>
         <button
@@ -81,7 +87,11 @@ export function PersonCard({
 
       {expanded && (
         <div className="px-4 sm:px-5 pb-5 pt-1 animate-fade-in border-t border-line/70 mt-1">
-          <UpcomingEvents person={person} softDate={softDate} />
+          {isWork ? (
+            <WorkDetails person={person} />
+          ) : (
+            <UpcomingEvents person={person} softDate={softDate} />
+          )}
           <ContextNotes person={person} />
           <Controls person={person} onEdit={onEdit} />
         </div>
@@ -95,6 +105,29 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     <h4 className="text-xs uppercase tracking-[0.18em] text-muted mb-2.5 mt-5">
       {children}
     </h4>
+  );
+}
+
+function WorkDetails({ person }: { person: RelationshipWithDetails }) {
+  const rows: { label: string; value: string }[] = [];
+  if (person.role) rows.push({ label: "Role", value: person.role });
+  if (person.location) rows.push({ label: "Location", value: person.location });
+  if (person.family) rows.push({ label: "Family", value: person.family });
+
+  if (rows.length === 0) return null;
+
+  return (
+    <div>
+      <SectionTitle>Details</SectionTitle>
+      <dl className="space-y-1.5">
+        {rows.map((r) => (
+          <div key={r.label} className="flex gap-2 text-[14px]">
+            <dt className="w-20 shrink-0 text-muted">{r.label}</dt>
+            <dd className="text-ink-soft">{r.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 

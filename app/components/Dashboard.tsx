@@ -115,14 +115,16 @@ export function Dashboard({
           ))}
         </div>
 
-        {/* Reach Out */}
-        <section className="mb-12">
-          <div className="flex items-baseline justify-between mb-4">
-            <h2 className="font-serif text-2xl text-ink">Reach out</h2>
-            <span className="text-[13px] text-muted">this week &amp; soon</span>
-          </div>
-          <ReachOut people={active} onSelect={select} />
-        </section>
+        {/* Reach Out (personal only) */}
+        {view === "personal" && (
+          <section className="mb-12">
+            <div className="flex items-baseline justify-between mb-4">
+              <h2 className="font-serif text-2xl text-ink">Reach out</h2>
+              <span className="text-[13px] text-muted">this week &amp; soon</span>
+            </div>
+            <ReachOut people={active} onSelect={select} />
+          </section>
+        )}
 
         {/* Everyone */}
         <section>
